@@ -20,8 +20,11 @@ app.use(express.static("public"));
 app.use('/tweets', tweetsRouter);
 
 
+app.use((req, res)=>{
+  res.sendStatus(404);
+});
 app.use( (err, req, res,) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.sendStatus(500);
 });
 export default app;

@@ -49,3 +49,9 @@ Headers:Authorization: Bearer JWT - 유효성 검사
 클라이언트에게 전달
 
 
+bycrypt - 단방향
+password-hashing algorythm
+해쉬된 암호를 저장한다.
+alg + cost + salt(해커가 가진 예제코드가 많아서 풀지 못하게 만들려고) + hash
+
+

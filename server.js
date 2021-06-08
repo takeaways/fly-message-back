@@ -1,21 +1,10 @@
 import express from "express";
-import helmet from "helmet";
-import morgan from "morgan";
-import cors from "cors";
-import cookieParser from "cookie-parser";
 
+import connectMiddleware from "./middleware.js";
 import tweetsRouter from "./routers/tweet.js";
 
 const app = express();
-
-
-app.use(helmet());
-app.use(morgan('combined'));
-app.use(cookieParser());
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({extended:false}));
-app.use(express.static("public"));
+connectMiddleware(app);
 
 app.use('/tweets', tweetsRouter);
 

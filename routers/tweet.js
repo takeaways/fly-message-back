@@ -1,91 +1,61 @@
-import express from "express";
+import express from 'express';
+import 'express-async-errors';
 
-import {formatResponse} from "../utils/format.js";
+import * as tweetRepository from "../data/tweet.js";
 
 const router = express.Router();
 
-let tweets = [];
-
-router.get('/',(req, res) =>{
-  const {username} = req.query;
-
-  if(username){
-    const userTweets = tweets.filter(tweet => tweet.username === username);
-    return res.status(200).json(formatResponse(userTweets,null));
-  }
-  
-  res.status(200).json(formatResponse(tweets,null));
+// GET /tweets
+// GET /tweets?username=:username
+router.get('/', (req, res) => {
+  const username = req.query.username;
+  const data = username
+    ? tweetRepository.getAllTweetsByUsername(username)
+    : tweetRepository.getAllTweets();
+  res.status(200).json(data);
 });
 
-router.get('/:id', (req, res)=>{
-  const {id} = req.params;
-  
-  if(isNaN(Number(id))){
-    return res.sendStatus(400);
+// GET /tweets/:id
+router.get('/:id', (req, res) => {
+  const id = req.params.id;
+  const tweet = tweetRepository.getTweetById(id);
+  if (tweet) {
+    res.status(200).json(tweet);
+  } else {
+    res.status(404).json({ message: `Tweet id(${id}) not found` });
   }
-
-  const tweet = tweets.filter(tweets => tweets.id === id)[0];
-  if(!tweet){
-    return res.sendStatus(404);
-  }
-
-  res.status(200).json(formatResponse(tweet,null));
 });
 
+// POST /tweeets
 router.post('/', (req, res) => {
-  const {body} = req;
-
-  const id = String(tweets.length + 1);
-  const username = body?.username;
-  const text = body?.text;
-  const name = body?.name;
-
-  if(username && text && name){
-    tweets.push({id,...body});
-  }
-
-  res.status(201).json(formatResponse(tweets, null));
-
+  const { text, name, username } = req.body;
+  const tweet = {
+    id: Date.now().toString(),
+    text,
+    createdAt: new Date(),
+    name,
+    username,
+  };
+  res.status(201).json(tweetRepository.createTweet(tweet));
 });
 
-router.put('/:id',(req, res)=>{
-  const {id} = req.params;
-  const {body} = req;
-  
-  if(isNaN(Number(id))){
-    return res.sendStatus(400);
+// PUT /tweets/:id
+router.put('/:id', (req, res) => {
+  const id = req.params.id;
+  const text = req.body.text;
+  const tweet = tweetRepository.getAllTweets().find((tweet) => tweet.id === id);
+  if (tweet) {
+    tweet.text = text;
+    res.status(200).json(tweet);
+  } else {
+    res.status(404).json({ message: `Tweet id(${id}) not found` });
   }
-
-  const tweetIndex = tweets.findIndex(tweet => tweet.id === id);
-
-  if(tweetIndex < 0){
-    return res.sendStatus(404);
-  }
-  
-  const tweet = tweets.splice(tweetIndex,1);
-  tweets = [{...tweet[0],...body}, ...tweets];
-
-  
-  res.status(201).json(formatResponse(tweets, null));
 });
 
-router.delete('/:id',(req, res)=>{
-  const {id} = req.params;
-  
-  if(isNaN(Number(id))){
-    return res.sendStatus(400);
-  }
-
-  const tweetIndex = tweets.findIndex(tweet => tweet.id === id);
-
-  if(tweetIndex < 0){
-    return res.sendStatus(404);
-  }
-  
-  const deleted = tweets.splice(tweetIndex,1);
-  
-  res.status(200).json(formatResponse(deleted, null));
+// DELETE /tweets/:id
+router.delete('/:id', (req, res) => {
+  tweetRepository.deleteTweet(req.params.id);
+  res.sendStatus(204);
 });
-
 
 export default router;
